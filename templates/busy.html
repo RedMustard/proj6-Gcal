@@ -47,13 +47,13 @@
 
 <h2>Date range</h2>
   <form action="/setrange" method="post">
-  <input type="text" name="daterange"
+  <input type="text" name="daterange" size="12"
     {% if session.daterange is defined %}
          value="{{session.daterange}}"
     {% endif %}
-     class="pull-left"
+     class="pull-down"
      style="background: #fff; cursor: pointer; padding: 5px 10px;
-     border: 1px solid #ccc; width: 100%" >
+     border: 1px solid #ccc; width: 15em" >
   <script type="text/javascript">
   $(function() {
   $('input[name="daterange"]').daterangepicker(
@@ -71,9 +71,9 @@
     });
   </script>
 
-<input type="submit" value="Apply date range" />
+<br /><input type="submit" value="Apply date range" />
 </form>
-
+  
     <!--
     The user is offered a chance to times that *do not* appear
     as 'busy' in any of a selected set of their calendars (e.g., times
@@ -83,6 +83,23 @@
     If we don't, we provide a link that can be used to authorize
     access to the calendars. 
     -->
+
+    <h3>Scheduled busy times for calendar {{ calendarID }}:</h3>
+    {% if session.busy_results is defined  %}
+    <div class="row">
+      {% for result in session.busy_results %}
+        <div class="col-md-4">
+        {{ result.start + " - " + result.end }} 
+       <div class="row">
+       </div>
+            </div>
+           {% if loop.index is divisibleby 3 %}
+            <div class="col">
+           {% endif %}
+    {% endfor %}
+    </div>
+    </div>
+  {% endif %}
 
   </div>
 

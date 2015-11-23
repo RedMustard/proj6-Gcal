@@ -59,7 +59,11 @@ def choose():
     gcal_service = get_gcal_service(credentials)
     app.logger.debug("Returned from get_gcal_service")
     flask.session['calendars'] = list_calendars(gcal_service)
-    return render_template('index.html')
+    if flask.session.get('calendarID'):
+        flask.session['busytimes'] = list_busytimes(gcal_service)
+        return render_template('busy.html')
+    else:
+      return render_template('index.html')
 
 ####
 #
@@ -123,6 +127,9 @@ def get_gcal_service(credentials):
   http_auth = credentials.authorize(httplib2.Http())
   service = discovery.build('calendar', 'v3', http=http_auth)
   app.logger.debug("Returning service")
+
+
+
   return service
 
 @app.route('/oauth2callback')
@@ -184,16 +191,30 @@ def setrange():
     widget.
     """
     app.logger.debug("Entering setrange")  
-    flask.flash("Setrange gave us '{}'".format(
+    flask.flash("New date range selected: '{}'".format(
       request.form.get('daterange')))
     daterange = request.form.get('daterange')
     flask.session['daterange'] = daterange
     daterange_parts = daterange.split()
     flask.session['begin_date'] = interpret_date(daterange_parts[0])
     flask.session['end_date'] = interpret_date(daterange_parts[2])
+    bdate = flask.session['begin_date']
+    edate = flask.session['end_date']
     app.logger.debug("Setrange parsed {} - {}  dates as {} - {}".format(
       daterange_parts[0], daterange_parts[1], 
       flask.session['begin_date'], flask.session['end_date']))
+    return flask.redirect(flask.url_for("choose"))
+
+
+@app.route('/setcalendar', methods=['GET', 'POST'])
+def setcalendar():
+    """
+    User chose a calendar.
+    """
+    if request.method == "GET":
+      calendarID = request.args.get('calendarID')
+      flask.session['calendarID'] = calendarID
+
     return flask.redirect(flask.url_for("choose"))
 
 ####
@@ -287,8 +308,7 @@ def list_calendars(service):
         summary = cal["summary"]
         # Optional binary attributes with False as default
         selected = ("selected" in cal) and cal["selected"]
-        primary = ("primary" in cal) and cal["primary"]
-        
+        primary = ("primary" in cal) and cal["primary"]      
 
         result.append(
           { "kind": kind,
@@ -297,7 +317,45 @@ def list_calendars(service):
             "selected": selected,
             "primary": primary
             })
+
     return sorted(result, key=cal_sort_key)
+
+
+def list_busytimes(service):
+    """
+    Given a google 'service' object, return a list of 
+    busy start/end times. 
+    """
+    query = {
+      "timeMin": flask.session['begin_date'],
+      "timeMax": flask.session['end_date'],
+      "timezone": "US/Central",
+      "items"  : [
+          {
+             "id" : flask.session['calendarID']
+          }
+      ]
+    }
+
+    query_result = service.freebusy().query(body=query)
+    busy_records = query_result.execute()
+
+    results = [ ]
+    record = busy_records["calendars"]
+    cal = record[flask.session["calendarID"]]
+    busy = cal["busy"]
+
+    for time in busy:
+      start = time["start"]
+      end = time["end"]
+
+      results.append(
+        { "start": format_arrow_date(start) + " " + format_arrow_time(start),
+          "end": format_arrow_date(end) + " " + format_arrow_time(end),
+          })
+
+    flask.session["busy_results"] = results
+    return sorted(results)
 
 
 def cal_sort_key( cal ):

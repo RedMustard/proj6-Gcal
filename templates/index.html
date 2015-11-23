@@ -79,9 +79,10 @@
     shown in each row (but the order is across then down; I would
     prefer down then across). 
     -->
-    <h3>Pick a calendar:</h3>
+
 <form action="/setcalendar" method"post">
   {% if session.calendars is defined  %}
+    <h3>Pick a calendar:</h3>
     <div class="row">
     {% for cal in session.calendars if cal.selected %}
             <div class="col-md-4">

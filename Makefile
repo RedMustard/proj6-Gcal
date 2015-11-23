@@ -10,7 +10,7 @@
 # On most platforms: 
 #PYVENV = pyvenv-2.7.7
 # On ix (with bug in ubuntu)
-PYVENV = pyvenv-2.7.7 --without-pip
+PYVENV = pyvenv install 2.7.6 --without-pip
 
 
 #

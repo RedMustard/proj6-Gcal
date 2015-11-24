@@ -355,7 +355,7 @@ def list_busytimes(service):
           })
 
     flask.session["busy_results"] = results
-    return sorted(results)
+    return results
 
 
 def cal_sort_key( cal ):

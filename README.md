@@ -1,4 +1,8 @@
-# proj6-Gcal
+# Project URL
+ix.cs.uoregon.edu:7367
+
+
+## proj6-Gcal
 Snarf appointment data from a selection of a user's Google calendars 
 
 ## What is here
